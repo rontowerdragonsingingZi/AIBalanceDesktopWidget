@@ -62,7 +62,11 @@ class GrokSession:Form {
    web.CoreWebView2.Settings.AreDevToolsEnabled=false;
    web.CoreWebView2.Settings.IsStatusBarEnabled=true;
    web.CoreWebView2.Settings.IsPasswordAutosaveEnabled=false;
-   web.CoreWebView2.NewWindowRequested+=delegate(object s,CoreWebView2NewWindowRequestedEventArgs e){e.Handled=true;if(e.Uri.StartsWith("https://",StringComparison.OrdinalIgnoreCase))web.CoreWebView2.Navigate(e.Uri);};
+   // Let WebView2 create a native popup so Google/X keep window.opener.
+   // Do NOT Navigate the opener WebView to the popup URL (that caused white screens).
+   web.CoreWebView2.NewWindowRequested+=delegate(object s,CoreWebView2NewWindowRequestedEventArgs e){
+    // Handled=false → native Edge popup, same profile, real opener relationship.
+   };
    web.CoreWebView2.NavigationStarting+=delegate {successfulPage=false;};
    web.CoreWebView2.NavigationCompleted+=delegate(object s,CoreWebView2NavigationCompletedEventArgs e){successfulPage=e.IsSuccess;loadedAt=DateTime.UtcNow;};
    web.CoreWebView2.SourceChanged+=delegate{Uri u;if(Uri.TryCreate(web.Source.ToString(),UriKind.Absolute,out u))address.Text="当前网站：https://"+u.Host;};
@@ -92,7 +96,6 @@ class GrokSession:Form {
       status.Text="等待官方用量页面：请完成登录，并打开用量页。";WriteStatus("awaiting-usage-page");
      }
     }
-    // Never reload while the user is completing sign-in or a challenge.
     if(HasSavedSession && GrokData.Status=="已连接 grok.com" && DateTime.UtcNow-lastReload>TimeSpan.FromSeconds(60)) {lastReload=DateTime.UtcNow;web.CoreWebView2.Reload();}
    }
   }catch {status.Text="暂时无法读取用量页，将自动重试。";}
