@@ -1,0 +1,17 @@
+*.bin
+auth.json
+check.json
+position.txt
+codex-off
+grok-enabled
+grok-usage.json
+grok-status.txt
+GrokWebProfile/
+
+.vs/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini
+*.bak

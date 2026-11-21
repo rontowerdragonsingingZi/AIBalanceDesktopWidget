@@ -1,25 +1,73 @@
-﻿# 额度挂件：紧凑横条版
+﻿# AI Balance Desktop Widget
 
-界面为 600 × 68 的横向长条，分四栏显示 Codex 5小时、Codex 每周、SuperGrok、Grok Bot 的剩余百分比、重置时间与进度条。无标题、底部说明或积分显示。重置时间直接显示在每栏第二行，格式为 MM-dd HH:mm；悬停可查看详情；过期数据为橙色并带 *。支持拖动、右键菜单和原有自启动。
+Windows 桌面额度挂件。在屏幕边缘显示 Codex（ChatGPT）短周期与每周剩余额度，以及 SuperGrok、Grok Bot 的每周剩余额度。
 
-运行 QuotaWidget.exe。右键 → 登录 Grok / 管理授权，在官方页面自行登录，再点击“打开用量页”。识别到用量后会提示“已连接”，点击“完成并连接”后继续后台刷新。
+A compact Windows desktop widget for Codex / ChatGPT usage quota and Grok (xAI) weekly balance. It stays above other windows, shows remaining percent and reset time, and keeps login data on this PC.
 
-- Codex 自动读取本机 ChatGPT 登录，查询短周期/每周剩余额度及额外积分。
-- SuperGrok 和 Grok Bot 均读取 grok.com/?_s=usage 中的两项周额度。桌面大数字是剩余百分比，详情列出已用比例、网页重置时间和可读的额外使用积分。
-- 每 60 秒刷新网页，挂件每 5 秒检查读取结果。需要网络，网页结构变化可能需要更新解析器。
-- 登录窗口使用微软 WebView2；独立会话保存在 %LOCALAPPDATA%/QuotaWidget/GrokWebProfile。无需浏览器扩展，无需复制 Cookie，不读取已有 Chrome 配置。
-- 这是本地持久化网页登录会话，不是官方 OAuth 授权。网站正常续期由浏览器处理，不保证永久登录。到期、风控、验证码需本人重新登录。
-- 超过三分钟的旧数据会明确标记过期。已启用同步时发生持续错误会提示一次；恢复后重置提醒。右键可再次打开登录窗口，点击“取消授权”会清除挂件专用浏览器的会话。
-- 挂件使用当前用户注册表 Run 项 QuotaWidget 在 Windows 登录后启动；已有连接时会启动专用浏览器后台同步。取消右键的自启动并退出即可停用。
+## 能看到什么
 
-## 验证范围
+默认是一条 600 × 68 的横条，四栏从左到右为：
 
-Codex 在线读取已通过；WebView2 登录窗口启动已通过。Grok 解析器通过中文截图转录、英文、0%、100%、缺失值等七项测试；额度模型通过剩余转换、过期与注销测试。已使用本机真实登录会话验证两项周额度、重置时间及额外积分。已修复 number-flow-react 动态数字组件的 aria-label 读取，并验证后台隐藏读取。完成按钮会验证两项额度后再隐藏；失败会保持窗口打开。
+- Codex 短周期（通常是 5 小时，以接口返回的窗口为准）
+- Codex 每周
+- SuperGrok
+- Grok Bot
 
-## 文件
+每栏显示剩余百分比、重置时间（`MM-dd HH:mm`）和进度条。没有标题栏，也不在条上显示积分。悬停可看详情；读取失败但还有上次成功数据时，数字为橙色并带 `*`。Grok 数据超过三分钟会标为过期。
 
-QuotaWidget.cs、GrokSession.cs、grok-parser.js 是源码，build.ps1 可重编译。Microsoft.Web.WebView2.*.dll 和 WebView2Loader.dll 为微软 SDK 1.0.4258.31，运行时使用本机 Edge WebView2。
+可拖动。位置保存在本机。右键或托盘图标可操作。
 
-原版本的 Cursor Grok Bot 查询和手动 Token 设置已经停用。原版本手动保存的 grok.bin/grokbot.bin 不再读取。
+## 运行
 
-来源：Codex 非官方查询实现参考 https://github.com/steipete/CodexBar/blob/main/docs/codex.md ；WebView2 文档 https://learn.microsoft.com/en-us/microsoft-edge/webview2/get-started/winforms 。Grok 使用用户官方用量页面已显示的数据。
+需要 Windows、.NET Framework 4.5 或更高版本，以及本机 Edge WebView2 运行时（仅 Grok 登录窗口需要）。下载后直接运行 `QuotaWidget.exe`。同一用户只会有一个实例。
+
+Codex 需要本机已经用 ChatGPT 账号登录过 Codex。程序读取 `CODEX_HOME`，未设置时读取 `%USERPROFILE%\.codex\auth.json`，再向 ChatGPT 用量接口查询剩余额度。这不是官方客户端，接口变化时可能读不到。
+
+Grok 需要本人在程序打开的官方页面登录：
+
+1. 右键 → **登录 Grok / 管理授权…**
+2. 在 `grok.com` 完成登录，打开用量页
+3. 识别到 SuperGrok 和 Grok Bot 后，点击 **完成并连接**
+
+连接后登录窗口可以隐藏，专用浏览器会继续在后台同步。这是保存在本机的网页会话，不是 xAI 官方 OAuth，不保证永久有效。过期、验证码或风控时需要重新登录。
+
+## 右键菜单
+
+- **立即刷新**：马上重查当前仍显示的额度
+- **关闭 Codex / 显示 Codex**：收起或恢复两栏 Codex。关闭后窗口变为 300 × 68，只留 SuperGrok 和 Grok Bot，并停止 Codex 额度请求。选择会记住，下次启动仍然有效
+- **登录 Grok / 管理授权…**：打开或重新显示 Grok 登录窗口。窗口里可以取消授权并清除挂件专用浏览器会话
+- **保持置顶**
+- **开机自启动**：写入或删除当前用户注册表 Run 项 `QuotaWidget`
+- **隐藏 / 显示**
+- **退出**
+
+取消自启动后，再退出，即可停用。
+
+## 刷新
+
+- Codex 显示时，约每 60 秒查询一次。关闭 Codex 后不再发起该查询
+- Grok 用量页约每 60 秒刷新，挂件约每 5 秒读取一次结果
+- 已启用 Grok 同步时，若持续读不到用量，托盘会提示一次；恢复后可再次提示
+
+## 隐私
+
+额度查询和登录会话都留在本机。
+
+- Codex 令牌只从本机 Codex 登录文件读取，不写入本仓库
+- Grok 会话在 `%LOCALAPPDATA%\QuotaWidget\GrokWebProfile`
+- 不安装浏览器扩展，不复制 Cookie，不读取已有 Chrome 配置
+- 不上传账号、令牌或用量到这个 GitHub 仓库
+
+## 编译
+
+源码是 `QuotaWidget.cs`、`GrokSession.cs` 和 `grok-parser.js`。在仓库目录执行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
+```
+
+`Microsoft.Web.WebView2.*.dll` 与 `WebView2Loader.dll` 来自微软 WebView2 SDK 1.0.4258.31，运行时仍使用本机 Edge WebView2。
+
+## 参考
+
+Codex 用量读取的实现参考 [CodexBar 的 Codex 文档](https://github.com/steipete/CodexBar/blob/main/docs/codex.md)。WebView2 用法见[微软 WinForms 入门文档](https://learn.microsoft.com/en-us/microsoft-edge/webview2/get-started/winforms)。Grok 只读取用户自己在官方用量页上已能看到的数据。
